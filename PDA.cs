@@ -47,7 +47,7 @@ namespace MeterMateEMR3
 
             try
             {
-                string message = "";
+                string message = string.Empty;
                 byte[] byteIn = new byte[1];
 
                 while (true)
@@ -61,7 +61,7 @@ namespace MeterMateEMR3
                         if (byteIn[0] == STX)
                         {
                             // Start of message.
-                            message = "";
+                            message = string.Empty;
                             continue;
                         }
 
@@ -95,14 +95,18 @@ namespace MeterMateEMR3
                 try
                 {
                     string json = "{\"Command\": \"\", \"Result\": -99}";
+                    
                     Debug.Print("Received: " + message);
 
                     // Check EMR3 thread is running.
                     while (EMR3.IsRunning() == false)
+                    {
                         Thread.Sleep(250);
+                    }
 
                     // Check message is valid.
                     string[] parts = message.Split(new char[] { ',' });
+
                     if (parts.Length >= 1)
                     {
                         switch (parts[0])

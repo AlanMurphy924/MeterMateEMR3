@@ -75,12 +75,9 @@ namespace MeterMateEMR3
                         }
 
                         if (++idx == 3)
+                        {
                             idx = 0;
-                    }
-                    //else
-                    {
-                        // Restart at the top.
-                        //idx = 0;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -451,10 +448,7 @@ namespace MeterMateEMR3
         /// </summary>
         public static void SetPolling(string flag, out string json)
         {
-            if (flag == "1")
-                pollStatus = true;
-            else
-                pollStatus = false;
+            pollStatus = flag == "1";
 
             json = "{\"Command\": \"Spl\", \"Result\": 0}";
         }
@@ -475,14 +469,20 @@ namespace MeterMateEMR3
             {
                 // Convert string to a float.
                 float litres = 0;
-                try { litres = Convert.ToInt32(litresString); }
-                catch { }
+                try 
+                { 
+                    litres = Convert.ToInt32(litresString); 
+                }
+                catch 
+                { 
+                }
 
                 // Before presetting the meter, we press the MODE button 
                 // until the device is in security mode. This is done to
                 // ensure the meter is awake and after changing the preset
                 // it helps to redraw the screen display too.
                 byte[] reply2 = null;
+
                 for (int i = 0; i < 3; i++)
                 {
                     // Press MODE button.
@@ -490,6 +490,7 @@ namespace MeterMateEMR3
                     message1[0] = (byte)'S';
                     message1[1] = (byte)'u';
                     message1[2] = 0x02;
+
                     SendMessage(message1);
 
                     // Read meter display mode.
@@ -497,11 +498,14 @@ namespace MeterMateEMR3
                     message2[0] = (byte)'G';
                     message2[1] = (byte)'k';
                     message2[2] = 0x02;
+
                     reply2 = SendMessage(message2);
 
                     // Check if in SECURITY mode.
                     if (reply2 != null && reply2[2] == 0x03)
+                    {
                         break;
+                    }
                 }
 
                 if (reply2 != null && reply2[2] == 0x03)
@@ -510,7 +514,9 @@ namespace MeterMateEMR3
                     byte[] message3 = new byte[6];
                     message3[0] = (byte)'S';
                     message3[1] = (byte)'c';
+
                     BitConverter.InsertValueIntoArray(message3, 2, litres);
+
                     byte[] reply = SendMessage(message3);
 
                     if (reply != null)
@@ -520,15 +526,19 @@ namespace MeterMateEMR3
                         //   1 - Error - requested code/action not understood
                         //   2 - Error - requested action can not be performed
                         if (reply[0] == 'A')
+                        {
                             jsonBody = "\"Result\": " + (int)reply[1];
+                        }
 
                         if (reply[1] == 0x00)
                         {
                             // Press MODE to switch back to volume mode.
                             byte[] message4 = new byte[3];
+                            
                             message4[0] = (byte)'S';
                             message4[1] = (byte)'u';
                             message4[2] = 0x02;
+                            
                             SendMessage(message4);
                         }
                     }
@@ -573,6 +583,7 @@ namespace MeterMateEMR3
         
             // Checksum is 0x100 - (destination + source + message)
             int chk = destination + source;
+
             for (int i = 0; i < message.Length; i++)
             {
                 byte b = message[i];
@@ -610,17 +621,26 @@ namespace MeterMateEMR3
                 {
                     // Deduct escape characters from message length.
                     for (int i = 3; i < noBytes - 2; i++)
+                    {
                         if (readBuffer[i] == escapeChar)
+                        {
                             messageLen--;
+                        }
+                    }
 
                     // Copy bytes to reply.
                     reply = new byte[messageLen];
+
                     for (int i = 0, j = 3; i < messageLen; i++, j++)
                     {
                         if (readBuffer[j] == escapeChar)
+                        {
                             reply[i] = (byte)(readBuffer[++j] ^ 0x20);
+                        }
                         else
+                        {
                             reply[i] = readBuffer[j];
+                        }
                     }
                 }
             }
