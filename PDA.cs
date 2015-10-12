@@ -12,8 +12,8 @@ namespace MeterMateEMR3
         static object lockObj = new object();
         static SerialPort comPort;
 
-        static byte STX = 0x02;
-        static byte ETX = 0x03;
+        private const byte STX = 0x02;
+        private const byte ETX = 0x03;
 
         #region Start communications
 
@@ -47,9 +47,12 @@ namespace MeterMateEMR3
 
             try
             {
+                // The initial message is empty
                 string message = string.Empty;
+
                 byte[] byteIn = new byte[1];
 
+                // Loop forever (barring exceptions)
                 while (true)
                 {
                     // Wait for input - this will timeout after 1 second.
@@ -57,24 +60,25 @@ namespace MeterMateEMR3
                     {
                         //Debug.Print("Byte in : " + (int)byteIn[0]);
 
-                        // STX - Start of Text
-                        if (byteIn[0] == STX)
-                        {
-                            // Start of message.
-                            message = string.Empty;
-                            continue;
-                        }
+                        byte readByte = byteIn[0];
 
-                        // ETX - End of Text
-                        if (byteIn[0] == ETX)
+                        switch (readByte)
                         {
-                            // End of message.
-                            ProcessMessage(message);
-                            continue;
-                        }
+                            case STX:
+                                // Start of message
+                                message = string.Empty;
+                                continue;
 
-                        // Add to message.
-                        message += (char)byteIn[0];
+                            case ETX:
+                                // End of message
+                                ProcessMessage(message);
+                                continue;
+
+                            default:
+                                // Append on to the message
+                                message += (char)readByte;
+                                continue;
+                        }
                     }
                 }
             }
@@ -107,6 +111,7 @@ namespace MeterMateEMR3
                     // Check message is valid.
                     string[] parts = message.Split(new char[] { ',' });
 
+                    // Check there is at least one part
                     if (parts.Length >= 1)
                     {
                         switch (parts[0])
@@ -182,7 +187,10 @@ namespace MeterMateEMR3
 
         static void SendMessage(string json)
         {
+            // Construct the message to be sent to the PDA
             byte[] buffer = Encoding.UTF8.GetBytes((char)STX + json + (char)ETX);
+
+            // Write out to the Serial Port
             comPort.Write(buffer, 0, buffer.Length);
         }
 

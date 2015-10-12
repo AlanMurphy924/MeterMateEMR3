@@ -47,37 +47,35 @@ namespace MeterMateEMR3
         {
             int idx = 0;
 
+            // Poll forever
             while (true)
             {
                 try
                 {
-                    //if (pollStatus)
+                    // Poll meter for realtime litres.
+                    PDA.ProcessMessage("Grl");
+
+                    switch (idx)
                     {
-                        // Poll meter for realtime litres.
-                        PDA.ProcessMessage("Grl");
+                        case 0:
+                            // Poll meter for status.
+                            PDA.ProcessMessage("Gs");
+                            break;
 
-                        switch (idx)
-                        {
-                            case 0:
-                                // Poll meter for status.
-                                PDA.ProcessMessage("Gs");
-                                break;
+                        case 1:
+                            // Poll meter for preset litres.
+                            PDA.ProcessMessage("Gpl");
+                            break;
 
-                            case 1:
-                                // Poll meter for preset litres.
-                                PDA.ProcessMessage("Gpl");
-                                break;
+                        case 2:
+                            // Poll meter for current temperature.
+                            PDA.ProcessMessage("Gt");
+                            break;
+                    }
 
-                            case 2:
-                                // Poll meter for current temperature.
-                                PDA.ProcessMessage("Gt");
-                                break;
-                        }
-
-                        if (++idx == 3)
-                        {
-                            idx = 0;
-                        }
+                    if (++idx == 3)
+                    {
+                        idx = 0;
                     }
                 }
                 catch (Exception ex)
@@ -85,6 +83,7 @@ namespace MeterMateEMR3
                     Debug.Print("EMR3: Exception " + ex.Message);
                 }
 
+                // A message is sent every 100 ms
                 Thread.Sleep(100);
             }
         }
@@ -116,15 +115,14 @@ namespace MeterMateEMR3
             try
             {
                 // T 0x01 - Get Meter status.
-                byte[] message = new byte[2];
-                message[0] = (byte)'T';
-                message[1] = 0x01;
-
+                byte[] message = new byte[] { (byte)'T', 0x01 };
+                
                 // Send message to meter.
                 byte[] reply = SendMessage(message);
 
                 if (reply != null)
                 {
+                    // There must be 3 bytes in the reply
                     if (reply.Length == 3)
                     {
                         bool newInDeliveryMode = false;
@@ -187,9 +185,7 @@ namespace MeterMateEMR3
             try
             {
                 // Gt - Get current temperature.
-                byte[] message = new byte[2];
-                message[0] = (byte)'G';
-                message[1] = (byte)'t';
+                byte[] message = new byte[] { (byte)'G', (byte)'t' };
 
                 // Send message to meter.
                 byte[] reply = SendMessage(message);
@@ -229,9 +225,7 @@ namespace MeterMateEMR3
             try
             {
                 // Gc - Get preset.
-                byte[] message = new byte[2];
-                message[0] = (byte)'G';
-                message[1] = (byte)'c';
+                byte[] message = new byte[] { (byte)'G', (byte)'c' };
 
                 // Send message to meter.
                 byte[] reply = SendMessage(message);
