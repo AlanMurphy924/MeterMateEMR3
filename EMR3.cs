@@ -227,6 +227,7 @@ namespace MeterMateEMR3
                 // Gc - Get preset.
                 byte[] message = new byte[] { (byte)'G', (byte)'c' };
 
+                
                 // Send message to meter.
                 byte[] reply = SendMessage(message);
 
@@ -266,6 +267,7 @@ namespace MeterMateEMR3
                 message[0] = (byte)'G';
                 message[1] = (byte)'K';
 
+                
                 // Send message to meter.
                 byte[] reply = SendMessage(message);
 
