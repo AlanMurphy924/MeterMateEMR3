@@ -599,9 +599,23 @@ namespace MeterMateEMR3
 
                 sendBuffer[idx++] = b;
             }
+
+            // Calculate the checksum value that is to be written
+            chk = (byte)(0x100 - (chk & 0xff));
+
+            // If the checksum value is one of the escaped characters
+            // then add process this
+            if (chk == escapeChar || chk == delimiter)
+            {
+                // Add escape character.
+                sendBuffer[idx++] = escapeChar;
+
+                // Xor with 0x20
+                chk ^= 0x20;
+            }
     
             // Add checksum.
-            sendBuffer[idx++] = (byte)(0x100 - (chk & 0xff));
+            sendBuffer[idx++] = (byte)chk;
 
             // Close message with delimiter.
             sendBuffer[idx++] = delimiter;
