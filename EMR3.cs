@@ -18,10 +18,10 @@ namespace MeterMateEMR3
         static bool MeterError = false;
         static bool InCalibration = false;
 
-        static byte delimiter = 0x7e;
-        static byte escapeChar = 0x7d;
-        static byte destination = 0x01;
-        static byte source = 0xff;
+        static byte DELIMITER = 0x7e;
+        static byte ESCAPE_CHAR = 0x7d;
+        static byte DESTINATION = 0x01;
+        static byte SOURCE = 0xff;
 
         public static void Start()
         {
@@ -569,16 +569,16 @@ namespace MeterMateEMR3
             int idx = 0;
 
             // Start message with delimited.
-            sendBuffer[idx++] = delimiter;
+            sendBuffer[idx++] = DELIMITER;
 
             // Destination address.
-            sendBuffer[idx++] = destination;
+            sendBuffer[idx++] = DESTINATION;
 
             // Source address.
-            sendBuffer[idx++] = source;
+            sendBuffer[idx++] = SOURCE;
         
             // Checksum is 0x100 - (destination + source + message)
-            int chk = destination + source;
+            int chk = DESTINATION + SOURCE;
 
             for (int i = 0; i < message.Length; i++)
             {
@@ -588,10 +588,10 @@ namespace MeterMateEMR3
                 chk += b;
 
                 // These characters must be 'escaped'
-                if (b == escapeChar || b == delimiter)
+                if (b == ESCAPE_CHAR || b == DELIMITER)
                 {
                     // Add escape character.
-                    sendBuffer[idx++] = escapeChar;
+                    sendBuffer[idx++] = ESCAPE_CHAR;
 
                     // Xor with 0x20
                     b ^= 0x20;
@@ -605,10 +605,10 @@ namespace MeterMateEMR3
 
             // If the checksum value is one of the escaped characters
             // then add process this
-            if (chk == escapeChar || chk == delimiter)
+            if (chk == ESCAPE_CHAR || chk == DELIMITER)
             {
                 // Add escape character.
-                sendBuffer[idx++] = escapeChar;
+                sendBuffer[idx++] = ESCAPE_CHAR;
 
                 // Xor with 0x20
                 chk ^= 0x20;
@@ -618,7 +618,7 @@ namespace MeterMateEMR3
             sendBuffer[idx++] = (byte)chk;
 
             // Close message with delimiter.
-            sendBuffer[idx++] = delimiter;
+            sendBuffer[idx++] = DELIMITER;
 
             // Send message to meter.
             if (comPort.Write(sendBuffer, 0, idx) == idx)
@@ -632,7 +632,7 @@ namespace MeterMateEMR3
                     // Deduct escape characters from message length.
                     for (int i = 3; i < noBytes - 2; i++)
                     {
-                        if (readBuffer[i] == escapeChar)
+                        if (readBuffer[i] == ESCAPE_CHAR)
                         {
                             messageLen--;
                         }
@@ -643,7 +643,7 @@ namespace MeterMateEMR3
 
                     for (int i = 0, j = 3; i < messageLen; i++, j++)
                     {
-                        if (readBuffer[j] == escapeChar)
+                        if (readBuffer[j] == ESCAPE_CHAR)
                         {
                             reply[i] = (byte)(readBuffer[++j] ^ 0x20);
                         }
